@@ -1,0 +1,49 @@
+from Crypto.PublicKey import RSA
+
+from AESHelper import AESCipher
+import socket
+import sys
+
+
+serverKey = open('server.key', 'r')
+serverPrivKey = RSA.importKey(serverKey.read(), passphrase='projekt')
+
+clientKey = open('client.key', 'r')
+clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
+
+# Create a TCP/IP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Bind the socket to the port
+server_address = ('localhost', 10000)
+print 'starting up on %s port %s' % server_address
+sock.bind(server_address)
+# Listen for incoming connections
+sock.listen(1)
+
+while True:
+    # Wait for a connection
+    print 'waiting for a connection'
+    connection, client_address = sock.accept()
+    try:
+        print 'connection from', client_address
+
+        # Receive the data in small chunks and retransmit it
+        data = connection.recv(5000)
+        if data:
+            print 'sending data back to the client'
+            aesCipherObj = AESCipher(serverPrivKey.exportKey())
+            encrypted = aesCipherObj.decrypt(data)
+            ck = clientPrivateKey.exportKey()
+            if(ck == encrypted):
+                connection.sendall("Approved")
+                while True:
+                    data = connection.recv(32)
+            else:
+                connection.sendall("Not Approved")
+        else:
+            print >> sys.stderr, 'no more data from', client_address
+            break
+
+    finally:
+        # Clean up the connection
+        connection.close()
