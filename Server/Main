@@ -38,6 +38,7 @@ while True:
                 connection.sendall("Approved")
                 while True:
                     data = connection.recv(32)
+
             else:
                 connection.sendall("Not Approved")
         else:
