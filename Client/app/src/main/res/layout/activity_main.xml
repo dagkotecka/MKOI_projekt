@@ -31,13 +31,15 @@
         android:layout_width="340dp"
         android:layout_height="150dp"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:id="@+id/clientFilesListView" />
 
     <ListView
         android:layout_width="340dp"
         android:layout_height="150dp"
         android:layout_above="@+id/listServerFilesBtn"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:id="@+id/serverFilesListView" />
 
     <Button
         android:text="Load File"
