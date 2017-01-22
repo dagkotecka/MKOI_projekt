@@ -21,23 +21,23 @@ public class AESHelper {
 
     public String Encrypt() throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
-        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        IvParameterSpec ivspec = new IvParameterSpec(iv);
-        Cipher cipher = Cipher.getInstance("AES/CTS/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, privateServerKey, ivspec);
+
+        Cipher cipher = Cipher.getInstance("AES");
+        System.out.println(new BASE64Encoder().encode(privateClientKey.getEncoded()));
+        System.out.println(new BASE64Encoder().encode(privateServerKey.getEncoded()));
+
+        cipher.init(Cipher.ENCRYPT_MODE, privateServerKey);
         byte[] encryptedByteClientKey = cipher.doFinal(privateClientKey.getEncoded());
         return new BASE64Encoder().encode(encryptedByteClientKey);
     }
 
     public String Decrypt(String encryptedMessage) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
-        byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-        IvParameterSpec ivspec = new IvParameterSpec(iv);
-        Cipher cipher = Cipher.getInstance("AES/CTS/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateServerKey, ivspec);
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, privateServerKey);
         byte[] decodedByteClientKey = new BASE64Decoder().decodeBuffer(encryptedMessage);
         byte[] decryptedByteClientKey = cipher.doFinal(decodedByteClientKey);
-        return new String(decryptedByteClientKey);
+        return new String(decryptedByteClientKey, "ISO-8859-1");
 
     }
 }
