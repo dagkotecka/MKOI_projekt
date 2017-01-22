@@ -12,7 +12,7 @@ clientKey = open('client.key', 'r')
 clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_address = ('localhost', 8888)
+server_address = ('127.0.0.1', 8888)
 print 'Server on %s port %s' % server_address
 
 sock.bind(server_address)

@@ -1,50 +1,56 @@
 /**
  * Created by Dax on 20.01.2017.
  */
-import javax.crypto.*;
-import javax.crypto.spec.DESedeKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.nio.file.Files;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 
 //import static spark.Spark.*;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         //get("/hello", (req, res) -> "Hello World");
-        MessageDigest sha = MessageDigest.getInstance("SHA-1");
-        key = sha.digest(key);
-        key = Arrays.copyOf(key, 16);
-        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
-    }
-
-    public static String getKey(String fileName) throws Exception {
-
-
-        BufferedReader br = new BufferedReader(new FileReader(fileName));
-        String everything;
         try {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            everything = sb.toString();
-        } finally {
-            br.close();
+            SecretKey privKeyServer = getPrivateKey((System.getProperty("user.dir")) +"/src/main/java/server.der");
+            SecretKey privKeyClient = getPrivateKey((System.getProperty("user.dir")) +"/src/main/java/client.der");
+            AESHelper aesHelper = new AESHelper(privKeyServer, privKeyClient);
+            String enc = aesHelper.Encrypt();
+            System.out.println(enc);
+            System.out.println(aesHelper.Decrypt(enc));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return everything;
+    }
+    static {
+        System.out.println(System.getProperty("java.version"));
+        for (Provider provider : Security.getProviders())
+            System.out.println(provider);
+    }
+    public static SecretKey getPrivateKey(String fileName) throws Exception {
+
+
+
+        File keyFile = new File(fileName);
+        DataInputStream dateInputStream = new DataInputStream(new FileInputStream(keyFile));
+        byte[] keyBytes = new byte[(int) keyFile.length()];
+        dateInputStream.readFully(keyBytes);
+        dateInputStream.close();
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        keyBytes = sha.digest(keyBytes);
+
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        return secretKeySpec;
+        //PKCS8EncodedKeySpec spec =
+         //       new PKCS8EncodedKeySpec(keyBytes);
+        //KeyFactory kf = KeyFactory.getInstance("AES/CTS/PKCS5Padding");
+        //return kf.generatePrivate(secretKeySpec);
     }
 }
 
