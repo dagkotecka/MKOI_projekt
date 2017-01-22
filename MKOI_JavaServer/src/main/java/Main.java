@@ -20,21 +20,16 @@ public class Main {
             SecretKey privKeyServer = getPrivateKey((System.getProperty("user.dir")) +"/src/main/java/server.der");
             SecretKey privKeyClient = getPrivateKey((System.getProperty("user.dir")) +"/src/main/java/client.der");
             AESHelper aesHelper = new AESHelper(privKeyServer, privKeyClient);
+
             String enc = aesHelper.Encrypt();
-            System.out.println(enc);
-            System.out.println(aesHelper.Decrypt(enc));
+            System.out.println("ENCRYPTED: " + enc);
+            System.out.println("DECRYPTED: " + aesHelper.Decrypt(enc));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    static {
-        System.out.println(System.getProperty("java.version"));
-        for (Provider provider : Security.getProviders())
-            System.out.println(provider);
-    }
+
     public static SecretKey getPrivateKey(String fileName) throws Exception {
-
-
 
         File keyFile = new File(fileName);
         DataInputStream dateInputStream = new DataInputStream(new FileInputStream(keyFile));
@@ -47,10 +42,6 @@ public class Main {
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec;
-        //PKCS8EncodedKeySpec spec =
-         //       new PKCS8EncodedKeySpec(keyBytes);
-        //KeyFactory kf = KeyFactory.getInstance("AES/CTS/PKCS5Padding");
-        //return kf.generatePrivate(secretKeySpec);
     }
 }
 

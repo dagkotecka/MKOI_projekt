@@ -1,31 +1,22 @@
 package com.mkoi.client;
 
-import android.content.Context;
-import android.graphics.Path;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
-import java.util.Arrays;
 
-import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -36,8 +27,8 @@ public class MainActivity extends AppCompatActivity {
     private ObjectInputStream sInput; // to read from the socket
     private ObjectOutputStream sOutput; // to write on the socket
     public Socket socket;
-    String clientPrivateKey;
-    String serverPrivateKey;
+    SecretKey clientPrivateKey;
+    SecretKey serverPrivateKey;
     String encryptedString;
 
     @Override
@@ -50,10 +41,19 @@ public class MainActivity extends AppCompatActivity {
         clientListView = (ListView)findViewById(R.id.clientFilesListView);
         serverListView = (ListView)findViewById(R.id.serverFilesListView);
         try {
-            clientPrivateKey = getClientKey("client.key");
-            serverPrivateKey = getClientKey("server.key");
-            byte[] encrypted = encrypt(serverPrivateKey.getBytes(), clientPrivateKey.getBytes());
-            //encryptedString = new String(encrypted, "UTF-8");
+
+            clientPrivateKey = getPrivateKey(getClientKey("client.der"));
+            serverPrivateKey = getPrivateKey(getClientKey("server.der"));
+
+            //SecretKey skClient = getPrivateKey(clientPrivateKey);
+            //SecretKey skServer = getPrivateKey(serverPrivateKey);
+
+
+            AESHelper aesHelper = new AESHelper(serverPrivateKey, clientPrivateKey);
+            String encrypted = aesHelper.Encrypt();
+
+            System.out.println(encrypted);
+            System.out.println(aesHelper.Decrypt(encrypted));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,15 +85,15 @@ public class MainActivity extends AppCompatActivity {
                     dOut.writeUTF("This is the first type of message.");
                     dOut.flush(); // Send off the data                }
 
-                }
-                catch(Exception e){
+                } catch (Exception e) {
                 }
             }
 
-            };
+        };
 
         new Thread(test).start();
     }
+
     public String getClientKey(String fileName) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(getAssets().open(fileName)));
         StringBuilder sb = new StringBuilder();
@@ -104,16 +104,20 @@ public class MainActivity extends AppCompatActivity {
         reader.close();
         return sb.toString();
     }
+    public static SecretKey getPrivateKey(String value) throws Exception {
 
-    private static byte[] encrypt(byte[] raw, byte[] key) throws Exception {
-        MessageDigest sha = MessageDigest.getInstance("SHA-1");
-        key = sha.digest(key);
-        key = Arrays.copyOf(key, 16);
-        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-        byte[] encrypted = cipher.doFinal(raw);
-        return encrypted;
+
+
+        //File keyFile = new File(fileName);
+        //DataInputStream dateInputStream = new DataInputStream(new FileInputStream(keyFile));
+        byte[] keyBytes = value.getBytes("UTF-8");
+
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        keyBytes = sha.digest(keyBytes);
+
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        return secretKeySpec;
     }
 }
 
