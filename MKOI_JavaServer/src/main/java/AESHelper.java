@@ -37,7 +37,7 @@ public class AESHelper {
         cipher.init(Cipher.DECRYPT_MODE, privateServerKey);
         byte[] decodedByteClientKey = new BASE64Decoder().decodeBuffer(encryptedMessage);
         byte[] decryptedByteClientKey = cipher.doFinal(decodedByteClientKey);
-        return new String(decryptedByteClientKey, "ISO-8859-1");
+        return new BASE64Encoder().encode(decryptedByteClientKey);
 
     }
 }
