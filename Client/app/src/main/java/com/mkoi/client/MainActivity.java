@@ -2,22 +2,22 @@ package com.mkoi.client;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.MessageDigest;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -31,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     SecretKey serverPrivateKey;
     String encryptedString;
 
+    private static String password = "projekt";
+    static final int portNumber = 8888;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,24 +43,25 @@ public class MainActivity extends AppCompatActivity {
         listServerBtn = (Button)findViewById(R.id.listServerFilesBtn);
         clientListView = (ListView)findViewById(R.id.clientFilesListView);
         serverListView = (ListView)findViewById(R.id.serverFilesListView);
-        try {
+        //try {
 
-            clientPrivateKey = getPrivateKey(getClientKey("client.der"));
-            serverPrivateKey = getPrivateKey(getClientKey("server.der"));
-
-            //SecretKey skClient = getPrivateKey(clientPrivateKey);
-            //SecretKey skServer = getPrivateKey(serverPrivateKey);
+            //clientPrivateKey = getPrivateKey(getClientKey("client.der"));
+            //serverPrivateKey = getPrivateKey(getClientKey("server.der"));
 
 
-            AESHelper aesHelper = new AESHelper(serverPrivateKey, clientPrivateKey);
-            String encrypted = aesHelper.Encrypt();
+            //AESHelper aesHelper = new AESHelper(serverPrivateKey, clientPrivateKey);
+            //String encrypted = aesHelper.Encrypt();
 
-            System.out.println(encrypted);
-            System.out.println(aesHelper.Decrypt(encrypted));
+            //System.out.println(encrypted);
+            //System.out.println(aesHelper.Decrypt(encrypted));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //} catch (Exception e) {
+        //    e.printStackTrace();
+        //}
+
+        System.setProperty("javax.net.ssl.trustStore", String.valueOf(getApplicationContext().getResources().openRawResource(R.raw.trust)));
+        System.setProperty("javax.net.ssl.trustStorePassword", "projekt");
+
         connect();
 
 
@@ -68,24 +72,22 @@ public class MainActivity extends AppCompatActivity {
 
             public void run() {
 
-                InetAddress serverAddr = null;
+                SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
                 try {
-                    serverAddr = InetAddress.getByName("10.0.2.2");
-                } catch (UnknownHostException e) {
-                    // TODO Auto-generated catch block
+                    socket = (SSLSocket) sslSocketFactory.createSocket("10.0.2.2", 8888);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Log.i("ClientActivity", "C: Connecting...");
+
+                OutputStream outputStream = null;
                 try {
-                    socket = new Socket("10.0.2.2", 8888);
-                    DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+                    outputStream = socket.getOutputStream();
+                    outputStream.write("Hello MotherFucker".getBytes());
+                    outputStream.flush();
+                    socket.close();
 
-                    // Send first message
-                    dOut.writeByte(1);
-                    dOut.writeUTF("This is the first type of message.");
-                    dOut.flush(); // Send off the data                }
-
-                } catch (Exception e) {
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
 
@@ -105,13 +107,7 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
     public static SecretKey getPrivateKey(String value) throws Exception {
-
-
-
-        //File keyFile = new File(fileName);
-        //DataInputStream dateInputStream = new DataInputStream(new FileInputStream(keyFile));
-        byte[] keyBytes = value.getBytes("UTF-8");
-
+        byte[] keyBytes = value.getBytes();
 
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         keyBytes = sha.digest(keyBytes);
@@ -119,6 +115,5 @@ public class MainActivity extends AppCompatActivity {
         SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec;
     }
+
 }
-
-
