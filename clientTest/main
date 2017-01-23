@@ -4,22 +4,23 @@ from AESHelper import AESCipher
 
 
 clientKey = open('client.key', 'r')
-clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
-
 serverKey = open('server.key', 'r')
+
+clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
 serverPrivateKey = RSA.importKey(serverKey.read(), passphrase='projekt')
 
+
 aesCipherObj = AESCipher(serverPrivateKey.exportKey())
-encryptedServerPrivateKey = aesCipherObj.encrypt(clientPrivateKey.exportKey())
+encryptedClientPrivateKey = aesCipherObj.encrypt(clientPrivateKey.exportKey())
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-server_address = ('localhost', 9000)
+server_address = ('localhost', 8888)
 
 def main():
     #secureConnection('get-listFiles')
-    #secureConnection('get-file-/Users/Dax/GitHub/MKOI_projekt/Server/files/test1.txt')
-    secureConnection('post-file')
+    secureConnection('get-file-/Users/Dax/GitHub/MKOI_projekt/Server/files/test1.txt')
+    #secureConnection('post-file')
 
 
 
@@ -27,7 +28,7 @@ def secureConnection(command):
     print 'connecting to %s port %s' % server_address
     sock.connect(server_address)
     try:
-        sock.sendall(encryptedServerPrivateKey)
+        sock.sendall(encryptedClientPrivateKey)
         amount_received = 0
         amount_expected = 128
         while (amount_received < amount_expected):

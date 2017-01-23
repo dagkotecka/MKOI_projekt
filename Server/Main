@@ -14,12 +14,12 @@ clientKey = open('client.key', 'r')
 clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_address = ('127.0.0.1', 9000)
+server_address = ('127.0.0.1', 8888)
 print 'Server on %s port %s' % server_address
 
 sock.bind(server_address)
 
-sock.listen(1000)
+sock.listen(1)
 
 while True:
     print 'waiting for a connection'
@@ -33,6 +33,7 @@ while True:
             aesCipherObj = AESCipher(serverPrivKey.exportKey())
             encrypted = aesCipherObj.decrypt(data)
             ck = clientPrivateKey.exportKey()
+            #comparing client private key with decrypted message
             if(ck == encrypted):
                 connection.sendall("Connection approved")
                 while True:
@@ -61,7 +62,7 @@ while True:
                     if "post-file" in data:
                         data = connection.recv(14)
                         print 'received "%s"' % data
-                        f = open("test.txt", "w")
+                        f = open("test1.txt", "w")
                         f.write(data)
                         f.close()
                         connection.sendall("saving file")
@@ -76,7 +77,7 @@ while True:
             else:
                 connection.send("Not Approved")
         else:
-            print >> sys.stderr, 'no more data from', client_address
+            print 'no more data from', client_address
             break
 
     finally:

@@ -6,6 +6,7 @@ from Crypto.Cipher import AES
 class AESCipher(object):
 
     def __init__(self, key): 
+        # 32 bytes block size
         self.bs = 32
         self.key = hashlib.sha256(key.encode()).digest()
 
