@@ -2,6 +2,7 @@ import socket
 from Crypto.PublicKey import RSA
 from AESHelper import AESCipher
 
+
 clientKey = open('client.key', 'r')
 clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
 
@@ -13,20 +14,51 @@ encryptedServerPrivateKey = aesCipherObj.encrypt(clientPrivateKey.exportKey())
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-server_address = ('localhost', 8888)
-print 'connecting to %s port %s' % server_address
-sock.connect(server_address)
-try:
-    sock.sendall(encryptedServerPrivateKey)
-    amount_received = 0
-    amount_expected = len(encryptedServerPrivateKey)
+server_address = ('localhost', 9000)
 
-    while amount_received < amount_expected:
-        data = sock.recv(32)
-        amount_received += len(data)
-        print 'received "%s"' % data
-        sock.sendall(data)
+def main():
+    secureConnection('get-listFiles')
+    #secureConnection('get-file-/Users/Dax/GitHub/MKOI_projekt/Server/files/test1.txt')
+    #secureConnection('post-file')
 
-finally:
-    print 'closing socket'
-    sock.close()
+
+
+def secureConnection(command):
+    print 'connecting to %s port %s' % server_address
+    sock.connect(server_address)
+    try:
+        sock.sendall(encryptedServerPrivateKey)
+        amount_received = 0
+        amount_expected = 128
+        while (amount_received < amount_expected):
+            data = sock.recv(53)
+            amount_received += len(data)
+            print 'received "%s"' % data
+            if data == "Connection approved":
+                sock.send(command)
+                print 'received "%s"' % data
+                if "get-file-" in command:
+                    data = sock.recv(14)
+                    print 'received "%s"' % data
+                    f = open("test.txt", "w")
+                    f.write(data)
+                    f.close()
+
+                data = sock.recv(53)
+                print 'received "%s"' % data
+
+            if "END" in data:
+                break
+
+
+
+
+
+    finally:
+        print 'closing socket'
+        sock.close()
+
+
+main()
+
+

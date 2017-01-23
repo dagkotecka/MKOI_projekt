@@ -1,9 +1,11 @@
+import os
+
 from Crypto.PublicKey import RSA
 
 from AESHelper import AESCipher
 import socket
 import sys
-
+import glob
 
 serverKey = open('server.key', 'r')
 serverPrivKey = RSA.importKey(serverKey.read(), passphrase='projekt')
@@ -12,12 +14,12 @@ clientKey = open('client.key', 'r')
 clientPrivateKey = RSA.importKey(clientKey.read(), passphrase='projekt')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_address = ('127.0.0.1', 8888)
+server_address = ('127.0.0.1', 9000)
 print 'Server on %s port %s' % server_address
 
 sock.bind(server_address)
 
-sock.listen(1)
+sock.listen(1000)
 
 while True:
     print 'waiting for a connection'
@@ -32,15 +34,46 @@ while True:
             encrypted = aesCipherObj.decrypt(data)
             ck = clientPrivateKey.exportKey()
             if(ck == encrypted):
-                connection.sendall("Approved")
+                connection.sendall("Connection approved")
                 while True:
-                    data = connection.recv(32)
+                    data = connection.recv(100)
+                    if data == "get-listFiles":
+                        print glob.glob(os.getcwd() + "/files/*")
+                        listofFiles = []
+                        listofFiles = glob.glob(os.getcwd() + "/files/*")
+                        for lf in listofFiles:
+                            print lf
+                            connection.send(lf)
+
+                        connection.send("END")
+                    if "get-file" in data:
+                        listofFiles = []
+                        listofFiles = glob.glob(os.getcwd() + "/files/*")
+                        for lf in listofFiles:
+                            if lf in data:
+                                f = open(lf, 'r')
+                                a = f.read()
+                                connection.sendall(a)
+                        connection.sendall("sending file")
+                        connection.sendall("END")
+
+
+                    if "post-file" in data:
+                        connection.sendall("saving file")
+                        connection.sendall("END")
+
+
+
+
+
+
 
             else:
-                connection.sendall("Not Approved")
+                connection.send("Not Approved")
         else:
             print >> sys.stderr, 'no more data from', client_address
             break
 
     finally:
         connection.close()
+
