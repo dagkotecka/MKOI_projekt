@@ -59,6 +59,11 @@ while True:
 
 
                     if "post-file" in data:
+                        data = connection.recv(14)
+                        print 'received "%s"' % data
+                        f = open("test.txt", "w")
+                        f.write(data)
+                        f.close()
                         connection.sendall("saving file")
                         connection.sendall("END")
 
